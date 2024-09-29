@@ -1,10 +1,19 @@
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedText } from "../components/ThemedText";
 import { ThemedView } from "../components/ThemedView";
-import { Dimensions, FlatList, Image, StyleSheet, View } from "react-native";
+import {
+    Alert,
+    Dimensions,
+    FlatList,
+    Image,
+    StyleSheet,
+    TouchableOpacity,
+    View,
+} from "react-native";
 import { EvilIcons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { ArticleType } from "../types/news";
+import dbService, { DBService, dbServiceInstance } from "../services/dbService";
 
 const data = [{}];
 // curl --location --request POST 'https://asia-south1-kc-stage-rp.cloudfunctions.net/globalNews?endpoint=everything&q=tesla&from=2024-07-27&sortBy=publishedAt' \
@@ -33,22 +42,51 @@ function getFormattedDate(dateString: string) {
 
 export default function NewsScreen() {
     const sWidth = Dimensions.get("window").width;
-    const [apiData, setApiData] = useState<Array<ArticleType>>([]);
+    const [listData, setListData] = useState<Array<ArticleType>>([]);
+
+    const fetchFromNetowrk = async (): Promise<Array<ArticleType>> => {
+        try {
+            const raw = await fetch(API_URL);
+            const data = await raw.json();
+            return data?.articles;
+        } catch (err) {
+            Alert.alert("Network error occured");
+            return [];
+        }
+    };
+
+    const fetchData = async () => {
+        const isLocalDataAvailable =
+            await dbServiceInstance.ifAnyNewsItemExists();
+        if (!isLocalDataAvailable) {
+            console.log("Actual netowrk request made");
+            const data = await fetchFromNetowrk();
+            // save in DB
+            dbServiceInstance.insertBulkNews(data);
+        } else {
+            console.log("Serving data from local db");
+        }
+
+        const displayData = await dbServiceInstance.getAllNews();
+        setListData(displayData);
+    };
 
     useEffect(() => {
         console.log("API", API_URL);
-        fetch(API_URL)
-            .then((res) => {
-                return res.json();
-            })
-            .then((resp) => {
-                console.log("api resp", resp);
-                setApiData(resp?.articles);
-            })
-            .catch((err) => console.log("error", err));
+        fetchData();
     }, []);
 
-    console.log("re-render API data", apiData);
+    const onRefreshPress = () => {
+        dbServiceInstance.deleteAllData();
+        dbServiceInstance.ifAnyNewsItemExists().then((data) => {
+            console.log("bba", data);
+        });
+        // dbServiceInstance.getAllNews().then((data) => {
+        //     console.log("All news data", data);
+        // });
+        // dbServiceInstance.deleteTable();
+    };
+    // console.log("re-render API data", apiData);
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
@@ -58,11 +96,13 @@ export default function NewsScreen() {
                     resizeMode="cover"
                     style={styles.header_image}
                 />
-                <EvilIcons name="refresh" size={40} />
+                <TouchableOpacity onPress={onRefreshPress}>
+                    <EvilIcons name="refresh" size={40} />
+                </TouchableOpacity>
             </ThemedView>
             <ThemedView>
                 <FlatList
-                    data={apiData}
+                    data={listData}
                     keyExtractor={(item) => item.url}
                     renderItem={({ item }) => {
                         return (

@@ -105,7 +105,7 @@ class DBService {
             const data = await this.#db?.getAllAsync(`
                 SELECT count(*) from news;
             `);
-            console.error(`${this.NAME} data received`, data);
+            console.log(`${this.NAME} data received`, data);
 
             if (data?.length ?? 0 > 0) {
                 const queryResult = (data![0] as any)["count(*)"];
