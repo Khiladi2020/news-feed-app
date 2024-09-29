@@ -6,7 +6,7 @@ class DBService {
     #isTableCreated = false;
     #db: SQLite.SQLiteDatabase | null = null;
 
-    NAME = "DB Service";
+    NAME = "[DB Service]";
 
     constructor() {}
 
@@ -46,18 +46,39 @@ class DBService {
         }
     }
 
-    async insertAllNews() {
+    async insertBulkNews(data: Array<ArticleType>) {
         try {
             await this.dbInit();
             await this.createTable();
 
+            // form sql statement
+            const values = data
+                .map((val) => {
+                    const stringifiedSource = "";
+                    const stringifiedAuthor = val.author?.replace(/"/g, "");
+                    const stringifiedTitle = val.title?.replace(/"/g, "");
+                    const stringifiedDescription = val.description?.replace(
+                        /"/g,
+                        ""
+                    );
+                    const stringifiedContent = val.content?.replace(/"/g, "");
+                    return `("${stringifiedAuthor}", "${stringifiedTitle}", "${stringifiedSource}", "${stringifiedDescription}", "${val.url}", "${val.urlToImage}", "${val.publishedAt}", "${stringifiedContent}")`;
+                })
+                .join(",");
+
+            console.log(
+                "final query",
+                `INSERT INTO news (author ,title ,source ,description ,url ,urlToImage ,publishedAt ,content)
+            VALUES ${values};`
+            );
+
             await this.#db?.execAsync(`
                 INSERT INTO news (author ,title ,source ,description ,url ,urlToImage ,publishedAt ,content)
-                VALUES ("ravinder singh", "Hero", "Mint", "Hero h ji hero", "not present", "not present", "At world start", "super vala super hero h apna bhai");
+                VALUES ${values};
             `);
             console.log(`${this.NAME} data insert success`);
         } catch (err) {
-            console.error("Error in inserting data", err);
+            console.error(`${this.NAME} Error in inserting data`, err);
         }
     }
 
@@ -71,7 +92,22 @@ class DBService {
             `);
             return data;
         } catch (err) {
-            console.error("Error in getting data", err);
+            console.error(`${this.NAME} Error in getting data`, err);
+        }
+    }
+
+    async deleteTable() {
+        try {
+            await this.dbInit();
+            await this.createTable();
+
+            await this.#db?.execAsync(`
+                DELETE from news;
+            `);
+
+            console.log(`${this.NAME} news table deleted`);
+        } catch (err) {
+            console.error(`${this.NAME} Error in getting data`, err);
         }
     }
 }
