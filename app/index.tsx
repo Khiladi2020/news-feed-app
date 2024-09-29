@@ -4,6 +4,7 @@ import { ThemedView } from "../components/ThemedView";
 import { Dimensions, FlatList, Image, StyleSheet, View } from "react-native";
 import { EvilIcons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
+import { ArticleType } from "../types/news";
 
 const data = [{}];
 // curl --location --request POST 'https://asia-south1-kc-stage-rp.cloudfunctions.net/globalNews?endpoint=everything&q=tesla&from=2024-07-27&sortBy=publishedAt' \
@@ -11,20 +12,6 @@ const data = [{}];
 // --data ''
 
 const API_URL = `https://newsapi.org/v2/everything?q=india&from=2024-08-29&sortBy=publishedAt&page=1&pageSize=100&apiKey=${process.env.EXPO_PUBLIC_NEWS_API_KEY}`;
-
-type ArticleType = {
-    source: {
-        id: string;
-        name: string;
-    };
-    author: string;
-    title: string;
-    description: string;
-    url: string;
-    urlToImage: string;
-    publishedAt: string;
-    content: string;
-};
 
 function getFormattedDate(dateString: string) {
     const date = new Date(dateString);
