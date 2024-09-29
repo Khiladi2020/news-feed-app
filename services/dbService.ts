@@ -82,7 +82,7 @@ class DBService {
         }
     }
 
-    async getAllNews() {
+    async getAllNews(): Promise<ArticleType[]> {
         try {
             await this.dbInit();
             await this.createTable();
@@ -90,13 +90,33 @@ class DBService {
             const data = await this.#db?.getAllAsync(`
                 SELECT * from news;
             `);
-            return data;
+            return data as ArticleType[];
+        } catch (err) {
+            console.error(`${this.NAME} Error in getting data`, err);
+            return [];
+        }
+    }
+
+    async ifAnyNewsItemExists() {
+        try {
+            await this.dbInit();
+            await this.createTable();
+
+            const data = await this.#db?.getAllAsync(`
+                SELECT count(*) from news;
+            `);
+            console.error(`${this.NAME} data received`, data);
+
+            if (data?.length ?? 0 > 0) {
+                const queryResult = (data![0] as any)["count(*)"];
+                return queryResult > 0 ? true : false;
+            }
         } catch (err) {
             console.error(`${this.NAME} Error in getting data`, err);
         }
     }
 
-    async deleteTable() {
+    async deleteAllData() {
         try {
             await this.dbInit();
             await this.createTable();
