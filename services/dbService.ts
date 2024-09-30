@@ -51,6 +51,11 @@ class DBService {
             await this.dbInit();
             await this.createTable();
 
+            if (!data) {
+                console.log(`${this.NAME} no valid data to insert`);
+                return;
+            }
+
             // form sql statement
             const values = data
                 .map((val) => {
