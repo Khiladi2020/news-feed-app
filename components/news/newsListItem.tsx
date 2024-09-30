@@ -18,6 +18,71 @@ import {
 } from "react-native-reanimated";
 import { useRef } from "react";
 
+const SwipeAction = ({ dragX, swipeableRef, text, type = "left" }: any) => {
+    const windowWidth = Dimensions.get("window").width;
+    const viewWidth = windowWidth * 0.2;
+
+    let trans;
+
+    if (type == "left") {
+        trans = dragX.interpolate({
+            inputRange: [0, 50, 100, 101],
+            outputRange: [-viewWidth, 0, 0, 1],
+        });
+    } else {
+        trans = dragX.interpolate({
+            inputRange: [-100, -50, -1],
+            outputRange: [0, 10, viewWidth],
+        });
+    }
+
+    return (
+        <Animated.View
+            style={{
+                width: viewWidth,
+                backgroundColor: type === "left" ? "tomato" : "#0F9D58",
+                transform: [{ translateX: trans }],
+            }}
+        >
+            <TouchableOpacity
+                style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    alignItems: "center",
+                }}
+                onPress={() => swipeableRef.current!.close()}
+            >
+                <Animated.Text>{text}</Animated.Text>
+            </TouchableOpacity>
+        </Animated.View>
+    );
+};
+
+const renderLeftActions = (
+    _progress: any,
+    translation: SharedValue<number>,
+    swipeableRef: React.RefObject<any>
+) => (
+    <SwipeAction
+        dragX={translation}
+        swipeableRef={swipeableRef}
+        text="Delete"
+    />
+);
+
+const renderRightActions = (
+    _progress: any,
+    translation: SharedValue<number>,
+    swipeableRef: React.RefObject<any>
+) => (
+    <SwipeAction
+        dragX={translation}
+        swipeableRef={swipeableRef}
+        text="Pin"
+        type="right"
+    />
+);
+
 interface NewsListItemInterface {
     item: ArticleType;
 }
@@ -28,7 +93,15 @@ const NewsListItem: React.FunctionComponent<NewsListItemInterface> = ({
     const swipeRef = useRef(null);
 
     return (
-        <Swipeable ref={swipeRef}>
+        <Swipeable
+            ref={swipeRef}
+            renderLeftActions={(_, progress) =>
+                renderLeftActions(_, progress, swipeRef)
+            }
+            renderRightActions={(_, progress) =>
+                renderRightActions(_, progress, swipeRef)
+            }
+        >
             <View style={styles.news_item}>
                 <View style={styles.news_item_left}>
                     <ThemedText style={styles.subtle_text}>
