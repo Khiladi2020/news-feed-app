@@ -102,6 +102,23 @@ class DBService {
         }
     }
 
+    async getBatchedNews(offset: number, limit: number) {
+        try {
+            await this.dbInit();
+            await this.createTable();
+
+            const data = await this.#db?.getAllAsync(`
+                SELECT * from news
+                ORDER BY publishedAt DESC
+                LIMIT ${limit} OFFSET ${offset};
+            `);
+            return data as ArticleType[];
+        } catch (err) {
+            console.error(`${this.NAME} Error in getting data`, err);
+            return [];
+        }
+    }
+
     async ifAnyNewsItemExists() {
         try {
             await this.dbInit();
