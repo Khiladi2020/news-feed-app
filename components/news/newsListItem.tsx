@@ -17,6 +17,7 @@ import {
     useAnimatedStyle,
 } from "react-native-reanimated";
 import { useRef } from "react";
+import React from "react";
 
 const SwipeAction = ({ dragX, swipeableRef, text, type = "left" }: any) => {
     const windowWidth = Dimensions.get("window").width;
@@ -91,6 +92,7 @@ const NewsListItem: React.FunctionComponent<NewsListItemInterface> = ({
     item,
 }) => {
     const swipeRef = useRef(null);
+    console.log("re rendered item", item?.id);
 
     return (
         <Swipeable
@@ -168,4 +170,7 @@ const styles = StyleSheet.create({
     },
 });
 
-export default NewsListItem;
+export default React.memo(
+    NewsListItem,
+    (prev, next) => prev?.item?.id == next?.item?.id
+);
