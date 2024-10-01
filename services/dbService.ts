@@ -172,6 +172,25 @@ class DBService {
             console.error(`${this.NAME} Error in getting data`, err);
         }
     }
+
+    async pinNewsItem(id: number, value: 0 | 1) {
+        try {
+            await this.dbInit();
+            await this.createTable();
+
+            const status = await this.#db?.execAsync(`
+                UPDATE news
+                SET isPinned=${value}
+                WHERE id=${id};
+            `);
+
+            console.log(
+                `${this.NAME} updated table isPinned for id: ${id}, status: ${status}`
+            );
+        } catch (err) {
+            console.error(`${this.NAME} Error in setting pinned data`, err);
+        }
+    }
 }
 
 const dbServiceInstance = new DBService();
