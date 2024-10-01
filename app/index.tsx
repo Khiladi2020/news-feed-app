@@ -91,7 +91,8 @@ export default function NewsScreen() {
                         data.map((dd) => dd?.id)
                     );
                     offset.current += PAGE_SIZE;
-                    setListData(data);
+                    // Add current data in front of prev data
+                    setListData((prev) => data.concat(prev));
                 });
         }, 5000); // change to 10 sec for now 5 secs
 
