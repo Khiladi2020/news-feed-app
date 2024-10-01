@@ -11,6 +11,7 @@ type ArticleType = {
     urlToImage: string;
     publishedAt: string;
     content: string;
+    isPinned?: 0 | 1;
 };
 
 export type { ArticleType };
