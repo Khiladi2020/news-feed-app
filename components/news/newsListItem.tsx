@@ -22,7 +22,8 @@ import { AntDesign } from "@expo/vector-icons";
 
 const SwipeAction = ({
     dragX,
-    text,
+    textDelete,
+    textPin,
     type = "left",
     onDeleteClick,
     onPinClick,
@@ -66,7 +67,9 @@ const SwipeAction = ({
                 onPress={onDeleteClick}
             >
                 <AntDesign name="delete" size={20} color={"white"} />
-                <Animated.Text style={{ color: "white" }}>{text}</Animated.Text>
+                <Animated.Text style={{ color: "white" }}>
+                    {textDelete}
+                </Animated.Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -79,7 +82,9 @@ const SwipeAction = ({
                 onPress={onPinClick}
             >
                 <AntDesign name="pushpin" size={20} color={"white"} />
-                <Animated.Text style={{ color: "white" }}>{text}</Animated.Text>
+                <Animated.Text style={{ color: "white" }}>
+                    {textPin}
+                </Animated.Text>
             </TouchableOpacity>
         </Animated.View>
     );
@@ -101,7 +106,8 @@ const renderRightActions = (
 ) => (
     <SwipeAction
         dragX={translation}
-        text={item?.isPinned == 0 ? "Pin" : "Un Pin"}
+        textPin={item?.isPinned == 0 ? "Pin" : "Un Pin"}
+        textDelete={"Delete"}
         type="right"
         onDeleteClick={onDeleteClick}
         onPinClick={onPinClick}
