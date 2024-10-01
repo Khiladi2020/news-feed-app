@@ -118,7 +118,7 @@ export default function NewsScreen() {
         timerId.current = setInterval(() => {
             console.log("Refresh request received");
             fetchNextBatchOfData();
-        }, 5000); // change to 10 sec for now 5 secs
+        }, 10000); // change to 10 sec for now 5 secs
     };
 
     const startApp = async () => {
