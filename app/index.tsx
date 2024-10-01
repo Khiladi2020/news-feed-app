@@ -39,6 +39,7 @@ const API_URL = `https://newsapi.org/v2/everything?q=india&from=2024-${todayMont
 export default function NewsScreen() {
     const sWidth = Dimensions.get("window").width;
     const [listData, setListData] = useState<Array<ArticleType>>([]);
+
     const [isLoading, setIsLoading] = useState(true);
     const timerId = useRef<NodeJS.Timeout | null>(null);
 
@@ -98,7 +99,18 @@ export default function NewsScreen() {
                 }
                 offset.current += PAGE_SIZE;
                 // Add current data in front of prev data
-                setListData((prev) => data.concat(prev));
+                // then put all pinned items in front
+                setListData((prev) => {
+                    const combinedData = data.concat(prev);
+                    const pinnedItems = combinedData.filter(
+                        (val) => val.isPinned == 1
+                    );
+                    console.log("Pinned items", pinnedItems);
+                    const nonPinnedItems = combinedData.filter(
+                        (val) => val.isPinned == 0
+                    );
+                    return [...pinnedItems, ...nonPinnedItems];
+                });
             });
     };
 
@@ -144,6 +156,25 @@ export default function NewsScreen() {
             }
         });
     };
+
+    const onPinPress = (id: number, pinVal: 0 | 1) => {
+        console.log("pressed the pin", id, pinVal);
+
+        setListData((prev) => {
+            // switch pinned value here
+            const clonedData = prev.map((val) =>
+                val.id === id
+                    ? { ...val, isPinned: (pinVal == 1 ? 0 : 1) as 0 | 1 }
+                    : val
+            );
+            const pinnedItems = clonedData.filter((val) => val.isPinned == 1);
+            // console.log("Pinned items", pinnedItems);
+            const nonPinnedItems = clonedData.filter(
+                (val) => val.isPinned == 0
+            );
+            return [...pinnedItems, ...nonPinnedItems];
+        });
+    };
     // console.log("re-render API data", apiData);
 
     if (isLoading) {
@@ -178,7 +209,12 @@ export default function NewsScreen() {
                         data={listData}
                         keyExtractor={(item) => item.url}
                         renderItem={({ item }) => {
-                            return <NewsListItem item={item} />;
+                            return (
+                                <NewsListItem
+                                    item={item}
+                                    onPinPress={onPinPress}
+                                />
+                            );
                         }}
                         ItemSeparatorComponent={
                             <View style={styles.seperator} />
