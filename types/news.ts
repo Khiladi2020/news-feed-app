@@ -1,9 +1,11 @@
 type ArticleType = {
     id?: number;
-    source: {
-        id: string;
-        name: string;
-    };
+    source:
+        | {
+              id: string;
+              name: string;
+          }
+        | string;
     author: string;
     title: string;
     description: string;

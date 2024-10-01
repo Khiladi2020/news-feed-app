@@ -60,7 +60,10 @@ class DBService {
             // form sql statement
             const values = data
                 .map((val) => {
-                    const stringifiedSource = "";
+                    const stringifiedSource =
+                        typeof val.source == "object"
+                            ? val.source.name
+                            : val.source;
                     const stringifiedAuthor = val.author?.replace(/"/g, "");
                     const stringifiedTitle = val.title?.replace(/"/g, "");
                     const stringifiedDescription = val.description?.replace(
