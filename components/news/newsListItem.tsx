@@ -18,8 +18,15 @@ import {
 } from "react-native-reanimated";
 import { useRef } from "react";
 import React from "react";
+import { AntDesign } from "@expo/vector-icons";
 
-const SwipeAction = ({ dragX, text, type = "left", onClick }: any) => {
+const SwipeAction = ({
+    dragX,
+    text,
+    type = "left",
+    onDeleteClick,
+    onPinClick,
+}: any) => {
     const windowWidth = Dimensions.get("window").width;
     const viewWidth = windowWidth * 0.2;
 
@@ -41,19 +48,38 @@ const SwipeAction = ({ dragX, text, type = "left", onClick }: any) => {
         <Animated.View
             style={{
                 width: viewWidth,
-                backgroundColor: type === "left" ? "tomato" : "#0F9D58",
+                backgroundColor: type === "left" ? "tomato" : "#4BBDFC",
+                borderTopLeftRadius: 12,
+                borderBottomLeftRadius: 12,
+                justifyContent: "center",
+                gap: 8,
                 transform: [{ translateX: trans }],
             }}
         >
             <TouchableOpacity
                 style={{
-                    flex: 1,
                     justifyContent: "center",
                     alignItems: "center",
+                    padding: 8,
+                    gap: 8,
                 }}
-                onPress={onClick}
+                onPress={onDeleteClick}
             >
-                <Animated.Text>{text}</Animated.Text>
+                <AntDesign name="delete" size={20} color={"white"} />
+                <Animated.Text style={{ color: "white" }}>{text}</Animated.Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={{
+                    justifyContent: "center",
+                    alignItems: "center",
+                    padding: 8,
+                    gap: 8,
+                }}
+                onPress={onPinClick}
+            >
+                <AntDesign name="pushpin" size={20} color={"white"} />
+                <Animated.Text style={{ color: "white" }}>{text}</Animated.Text>
             </TouchableOpacity>
         </Animated.View>
     );
@@ -70,13 +96,15 @@ const renderRightActions = (
     _progress: any,
     translation: SharedValue<number>,
     item: ArticleType,
-    onClick: () => void
+    onDeleteClick: () => void,
+    onPinClick: () => void
 ) => (
     <SwipeAction
         dragX={translation}
         text={item?.isPinned == 0 ? "Pin" : "Un Pin"}
         type="right"
-        onClick={onClick}
+        onDeleteClick={onDeleteClick}
+        onPinClick={onPinClick}
     />
 );
 
@@ -94,12 +122,12 @@ const NewsListItem: React.FunctionComponent<NewsListItemInterface> = ({
     const swipeRef = useRef(null);
     console.log("re rendered item", item?.id);
 
-    const onLeftClick = () => {
+    const onDeleteClick = () => {
         onDeletePress(item);
         swipeRef?.current?.close();
     };
 
-    const onRightClick = () => {
+    const onPinClick = () => {
         onPinPress(item);
         swipeRef?.current?.close();
     };
@@ -107,17 +135,29 @@ const NewsListItem: React.FunctionComponent<NewsListItemInterface> = ({
     return (
         <Swipeable
             ref={swipeRef}
-            renderLeftActions={(_, progress) =>
-                renderLeftActions(_, progress, item, onLeftClick)
-            }
+            // renderLeftActions={(_, progress) =>
+            //     renderLeftActions(_, progress, item, onLeftClick)
+            // }
             renderRightActions={(_, progress) =>
-                renderRightActions(_, progress, item, onRightClick)
+                renderRightActions(_, progress, item, onDeleteClick, onPinClick)
             }
         >
             <View style={styles.news_item}>
                 <View style={styles.news_item_left}>
+                    {item?.isPinned ? (
+                        <View style={{ flexDirection: "row" }}>
+                            <AntDesign
+                                name="pushpin"
+                                size={20}
+                                color={styles.subtle_text.color}
+                            />
+                            <ThemedText style={styles.pinned_text}>
+                                Pinned on top
+                            </ThemedText>
+                        </View>
+                    ) : null}
                     <ThemedText style={styles.subtle_text}>
-                        {item.source.name}
+                        {item.source.toString()}
                     </ThemedText>
                     <ThemedText
                         style={styles.news_item_title}
@@ -181,6 +221,11 @@ const styles = StyleSheet.create({
 
     subtle_text_dark: {
         color: "#404040",
+    },
+    pinned_text: {
+        color: "#808080",
+        fontSize: 13,
+        marginLeft: 4,
     },
 });
 

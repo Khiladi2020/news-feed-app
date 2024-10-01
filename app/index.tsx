@@ -225,7 +225,7 @@ export default function NewsScreen() {
                 <ThemedView>
                     <FlatList
                         data={listData}
-                        keyExtractor={(item) => item.url}
+                        keyExtractor={(item) => item.id}
                         renderItem={({ item }) => {
                             return (
                                 <NewsListItem
