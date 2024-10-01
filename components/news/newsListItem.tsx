@@ -19,7 +19,7 @@ import {
 import { useRef } from "react";
 import React from "react";
 
-const SwipeAction = ({ dragX, swipeableRef, text, type = "left" }: any) => {
+const SwipeAction = ({ dragX, text, type = "left", onClick }: any) => {
     const windowWidth = Dimensions.get("window").width;
     const viewWidth = windowWidth * 0.2;
 
@@ -51,7 +51,7 @@ const SwipeAction = ({ dragX, swipeableRef, text, type = "left" }: any) => {
                     justifyContent: "center",
                     alignItems: "center",
                 }}
-                onPress={() => swipeableRef.current!.close()}
+                onPress={onClick}
             >
                 <Animated.Text>{text}</Animated.Text>
             </TouchableOpacity>
@@ -62,46 +62,56 @@ const SwipeAction = ({ dragX, swipeableRef, text, type = "left" }: any) => {
 const renderLeftActions = (
     _progress: any,
     translation: SharedValue<number>,
-    swipeableRef: React.RefObject<any>
-) => (
-    <SwipeAction
-        dragX={translation}
-        swipeableRef={swipeableRef}
-        text="Delete"
-    />
-);
+    item: ArticleType,
+    onClick: () => void
+) => <SwipeAction dragX={translation} text="Delete" onClick={onClick} />;
 
 const renderRightActions = (
     _progress: any,
     translation: SharedValue<number>,
-    swipeableRef: React.RefObject<any>
+    item: ArticleType,
+    onClick: () => void
 ) => (
     <SwipeAction
         dragX={translation}
-        swipeableRef={swipeableRef}
-        text="Pin"
+        text={item?.isPinned == 0 ? "Pin" : "Un Pin"}
         type="right"
+        onClick={onClick}
     />
 );
 
 interface NewsListItemInterface {
     item: ArticleType;
+    onPinPress: (item: ArticleType) => void;
+    onDeletePress: (item: ArticleType) => void;
 }
 
 const NewsListItem: React.FunctionComponent<NewsListItemInterface> = ({
     item,
+    onPinPress,
+    onDeletePress,
 }) => {
     const swipeRef = useRef(null);
     console.log("re rendered item", item?.id);
+
+    const onLeftClick = () => {
+        onDeletePress(item);
+        swipeRef?.current?.close();
+    };
+
+    const onRightClick = () => {
+        onPinPress(item);
+        swipeRef?.current?.close();
+    };
 
     return (
         <Swipeable
             ref={swipeRef}
             renderLeftActions={(_, progress) =>
-                renderLeftActions(_, progress, swipeRef)
+                renderLeftActions(_, progress, item, onLeftClick)
             }
             renderRightActions={(_, progress) =>
-                renderRightActions(_, progress, swipeRef)
+                renderRightActions(_, progress, item, onRightClick)
             }
         >
             <View style={styles.news_item}>
@@ -116,7 +126,11 @@ const NewsListItem: React.FunctionComponent<NewsListItemInterface> = ({
                     >
                         {item.title}
                     </ThemedText>
-                    <ThemedText style={styles.subtle_text}>
+                    <ThemedText
+                        style={styles.subtle_text}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                    >
                         {item.author}
                     </ThemedText>
                 </View>
@@ -172,5 +186,7 @@ const styles = StyleSheet.create({
 
 export default React.memo(
     NewsListItem,
-    (prev, next) => prev?.item?.id == next?.item?.id
+    (prev, next) =>
+        prev?.item?.id == next?.item?.id &&
+        prev?.item?.isPinned == next?.item?.isPinned
 );

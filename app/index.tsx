@@ -157,16 +157,34 @@ export default function NewsScreen() {
         });
     };
 
-    const onPinPress = (id: number, pinVal: 0 | 1) => {
-        console.log("pressed the pin", id, pinVal);
+    const onPinPress = (item: ArticleType) => {
+        console.log("pressed the pin", item);
 
         setListData((prev) => {
             // switch pinned value here
             const clonedData = prev.map((val) =>
-                val.id === id
-                    ? { ...val, isPinned: (pinVal == 1 ? 0 : 1) as 0 | 1 }
+                val.id === item.id
+                    ? {
+                          ...val,
+                          isPinned: (item.isPinned == 1 ? 0 : 1) as 0 | 1,
+                      }
                     : val
             );
+            const pinnedItems = clonedData.filter((val) => val.isPinned == 1);
+            // console.log("Pinned items", pinnedItems);
+            const nonPinnedItems = clonedData.filter(
+                (val) => val.isPinned == 0
+            );
+            return [...pinnedItems, ...nonPinnedItems];
+        });
+    };
+
+    const onDeletePress = (item: ArticleType) => {
+        console.log("pressed the delete key", item);
+
+        setListData((prev) => {
+            // switch pinned value here
+            const clonedData = prev.filter((val) => val.id != item.id);
             const pinnedItems = clonedData.filter((val) => val.isPinned == 1);
             // console.log("Pinned items", pinnedItems);
             const nonPinnedItems = clonedData.filter(
@@ -213,6 +231,7 @@ export default function NewsScreen() {
                                 <NewsListItem
                                     item={item}
                                     onPinPress={onPinPress}
+                                    onDeletePress={onDeletePress}
                                 />
                             );
                         }}
