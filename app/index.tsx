@@ -40,6 +40,7 @@ export default function NewsScreen() {
     const sWidth = Dimensions.get("window").width;
     const [listData, setListData] = useState<Array<ArticleType>>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const timerId = useRef<NodeJS.Timeout | null>(null);
 
     const offset = useRef(0);
     const PAGE_SIZE = 5;
@@ -56,6 +57,8 @@ export default function NewsScreen() {
     };
 
     const fetchData = async () => {
+        setIsLoading(true);
+
         const isLocalDataAvailable =
             await dbServiceInstance.ifAnyNewsItemExists();
         if (!isLocalDataAvailable) {
@@ -77,45 +80,69 @@ export default function NewsScreen() {
         setTimeout(() => {
             setIsLoading(false);
         }, 1000);
+
+        if (displayData.length > 0) return true;
+        else return false;
+    };
+
+    const fetchNextBatchOfData = () => {
+        dbServiceInstance
+            .getBatchedNews(offset.current, PAGE_SIZE)
+            .then((data) => {
+                console.log(
+                    "data refreshed",
+                    data.map((dd) => dd?.id)
+                );
+                if (data.length == 0) {
+                    resetApp();
+                }
+                offset.current += PAGE_SIZE;
+                // Add current data in front of prev data
+                setListData((prev) => data.concat(prev));
+            });
     };
 
     const startRefreshTimers = () => {
-        const id = setInterval(() => {
+        timerId.current = setInterval(() => {
             console.log("Refresh request received");
-
-            dbServiceInstance
-                .getBatchedNews(offset.current, PAGE_SIZE)
-                .then((data) => {
-                    console.log(
-                        "data refreshed",
-                        data.map((dd) => dd?.id)
-                    );
-                    offset.current += PAGE_SIZE;
-                    // Add current data in front of prev data
-                    setListData((prev) => data.concat(prev));
-                });
+            fetchNextBatchOfData();
         }, 5000); // change to 10 sec for now 5 secs
+    };
 
-        return id;
+    const startApp = async () => {
+        const isThereAnyData = await fetchData();
+        console.log("is there any data", isThereAnyData);
+        if (isThereAnyData) startRefreshTimers();
+    };
+
+    const resetApp = async () => {
+        console.log("[Reset App Data] No data. Clearing Timer");
+        clearInterval(timerId.current ?? undefined);
+        // Reset offset
+        offset.current = 0;
+        await dbServiceInstance.deleteAllData();
     };
 
     useEffect(() => {
         console.log("API", API_URL);
-        fetchData();
-        const timerId = startRefreshTimers();
+        startApp();
 
-        return () => clearInterval(timerId);
+        return () => clearInterval(timerId.current ?? undefined);
     }, []);
 
     const onRefreshPress = () => {
-        dbServiceInstance.deleteAllData();
-        dbServiceInstance.ifAnyNewsItemExists().then((data) => {
-            console.log("bba", data);
+        // If any data present in DB than start the timers
+        // otherwise fetch new data
+        dbServiceInstance.ifAnyNewsItemExists().then((exists) => {
+            // If Exists
+            if (exists) {
+                console.log("Data Existing Already, start to display those");
+                fetchNextBatchOfData();
+            } else {
+                console.log("Re starting the app data");
+                startApp();
+            }
         });
-        // dbServiceInstance.getAllNews().then((data) => {
-        //     console.log("All news data", data);
-        // });
-        // dbServiceInstance.deleteTable();
     };
     // console.log("re-render API data", apiData);
 
